@@ -2,10 +2,13 @@
 
 #define ColorPin 19
 #define ColorButtonPin 3
+#define IntensityButtonPin 4
+
 const int ColorModes = 17;
 uint8_t  colorMode   = 0; // Current Color
 
 int ColorButtonPreviousState=HIGH;
+int IntensityButtonPreviousState=HIGH;
 
 //The class which keeps track of RGB values
 class Color3
@@ -87,9 +90,10 @@ bool prideClick =false;
 bool americaClick =false;
 int delaySpeed = 10;
 int clickSpeed = 400;
-int delayEnd = 0; //Millisecond at which the delay ends. 
+long delayEnd = 0; //Millisecond at which the delay ends.
+float intensity = 1; 
 
-void setDelay(int delayLength)
+void setDelay(long delayLength)
 {
 delayEnd= millis() + delayLength;
 }
@@ -105,6 +109,9 @@ bool checkDelay()
 void setup() {
   //Setup Color Button
   pinMode(ColorButtonPin, INPUT_PULLUP);
+
+  //Setup Intensity Button
+  pinMode(IntensityButtonPin, INPUT_PULLUP);
 
   pixels.begin();
   pixels.show();
@@ -128,7 +135,23 @@ void loop() {
       }
  }
 
-//Color3* Color = new Color3();
+ //Read the Intensity button
+ int IntensityButtonCurrentState = digitalRead(IntensityButtonPin);
+//If the button has been pressed change the intensity
+ if(IntensityButtonCurrentState!=IntensityButtonPreviousState)//State changed
+ {
+   IntensityButtonPreviousState=IntensityButtonCurrentState;
+      if(IntensityButtonCurrentState == LOW) //Button Pressed
+      {
+        intensity = intensity + 0.1;
+        Serial.println(intensity);
+        if(intensity > 1)
+        {
+          intensity = 0.0;
+        }
+      }
+ }
+
 //Set the color
 switch (colorMode) 
 {
@@ -373,6 +396,6 @@ switch (colorMode)
   break;
 
 }
-  pixels.setPixelColor(0,Color.R,Color.G,Color.B);
+  pixels.setPixelColor(0,Color.R * intensity,Color.G * intensity,Color.B * intensity);
   pixels.show();
 }
